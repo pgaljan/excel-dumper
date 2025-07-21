@@ -22,20 +22,23 @@ except ImportError as e:
     sys.exit(1)
 
 
-def find_newest_excel_file():
-    """Find the newest Excel file in the current directory."""
+def find_newest_excel_file(input_dir="."):
+    """Find the newest Excel file in the specified directory."""
     excel_patterns = ['*.xlsx', '*.xls', '*.xlsm', '*.xlsb']
     excel_files = []
     
+    # Change to the specified directory for globbing
+    search_path = Path(input_dir)
+    
     for pattern in excel_patterns:
-        excel_files.extend(glob.glob(pattern))
+        excel_files.extend(search_path.glob(pattern))
     
     if not excel_files:
-        raise FileNotFoundError("No Excel files found in current directory")
+        raise FileNotFoundError(f"No Excel files found in directory: {input_dir}")
     
     # Get the newest file based on modification time
-    newest_file = max(excel_files, key=os.path.getmtime)
-    return newest_file
+    newest_file = max(excel_files, key=lambda f: f.stat().st_mtime)
+    return str(newest_file)
 
 
 def has_non_null_data(row):
@@ -165,16 +168,18 @@ USAGE:
     python dumper.py [OPTIONS]
 
 OPTIONS:
-    -file FILE          Specify Excel file to process (default: newest Excel file in current directory)
+    -file FILE          Specify Excel file to process (default: newest Excel file in input directory)
     -no-hide           Skip hidden worksheets (default: include all worksheets)
     -output DIR        Output directory for CSV file (default: current directory)
+    -input DIR         Input directory to search for Excel files (default: current directory)
     -help              Show this help message
 
 EXAMPLES:
-    python dumper.py                    # Process newest Excel file, include all sheets
+    python dumper.py                    # Process newest Excel file from current directory
     python dumper.py -file data.xlsx    # Process specific file
-    python dumper.py -no-hide           # Skip hidden worksheets
-    python dumper.py -output /path/to/output  # Specify output directory
+    python dumper.py -input ./source    # Process newest file from ./source directory
+    python dumper.py -input ./source -output ./exports  # Source and output directories
+    python dumper.py -input /data -file report.xlsx     # Specific file in input directory
     python dumper.py -file data.xlsx -output ./exports -no-hide  # All options combined
 
 OUTPUT:
@@ -215,20 +220,30 @@ def main():
     parser.add_argument('-file', dest='filename', help='Excel file to process')
     parser.add_argument('-no-hide', action='store_true', help='Skip hidden worksheets')
     parser.add_argument('-output', dest='output_dir', help='Output directory for CSV file')
+    parser.add_argument('-input', dest='input_dir', help='Input directory to search for Excel files')
     
     try:
         args = parser.parse_args()
         
         # Determine input file
         if args.filename:
-            if not os.path.exists(args.filename):
-                print(f"Error: File '{args.filename}' not found.")
+            # If filename is provided, check if it's absolute or relative
+            file_path = Path(args.filename)
+            if not file_path.is_absolute() and args.input_dir:
+                # If it's relative and input_dir is specified, join them
+                input_file = str(Path(args.input_dir) / args.filename)
+            else:
+                input_file = args.filename
+                
+            if not os.path.exists(input_file):
+                print(f"Error: File '{input_file}' not found.")
                 sys.exit(1)
-            input_file = args.filename
         else:
             try:
-                input_file = find_newest_excel_file()
-                print(f"Processing newest Excel file: {input_file}")
+                input_dir = args.input_dir if args.input_dir else "."
+                input_file = find_newest_excel_file(input_dir)
+                print(f"Processing newest Excel file: {Path(input_file).name}")
+                print(f"From directory: {Path(input_file).parent}")
             except FileNotFoundError as e:
                 print(f"Error: {e}")
                 sys.exit(1)
