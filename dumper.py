@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Excel Sheet Excavator Script
+Excel Sheet Dumper Script
 Extracts all non-null rows from Excel worksheets and saves to CSV format.
 """
 
@@ -14,9 +14,11 @@ from pathlib import Path
 
 try:
     import pandas as pd
-except ImportError:
-    print("Error: pandas library not found.")
-    print("Please install it with: pip install pandas openpyxl xlrd")
+    import openpyxl
+except ImportError as e:
+    print("Error: Required libraries not found.")
+    print("Please install with: pip install pandas openpyxl xlrd")
+    print(f"Missing: {e}")
     sys.exit(1)
 
 
@@ -38,30 +40,53 @@ def find_newest_excel_file():
 
 def has_non_null_data(row):
     """Check if a row contains any non-null data."""
-    return any(cell is not None and str(cell).strip() != '' and pd.notna(cell) for cell in row)
+    return any(cell is not None and str(cell).strip() != '' for cell in row)
 
 
 def extract_excel_data(filename, include_hidden=True):
     """Extract data from all worksheets in an Excel file."""
     try:
         # Read all sheets from the Excel file
+        # pandas automatically handles multiple Excel formats
         excel_file = pd.ExcelFile(filename)
         
         extracted_data = []
         
         for sheet_name in excel_file.sheet_names:
-            # Read the sheet into a DataFrame
-            df = pd.read_excel(filename, sheet_name=sheet_name, header=None)
-            
-            # Convert DataFrame to list of lists
-            sheet_data = df.values.tolist()
-            
-            # Process each row in the sheet
-            for row_idx, row in enumerate(sheet_data):
-                if has_non_null_data(row):
-                    # Prepend worksheet name as first column
-                    row_with_sheet = [sheet_name] + list(row)
-                    extracted_data.append(row_with_sheet)
+            try:
+                # Read the sheet into a DataFrame
+                df = pd.read_excel(filename, sheet_name=sheet_name, header=None)
+                
+                # Skip empty sheets
+                if df.empty:
+                    continue
+                
+                # Check if sheet is hidden (requires openpyxl for .xlsx files)
+                if not include_hidden:
+                    try:
+                        # Load workbook to check sheet visibility
+                        if filename.lower().endswith(('.xlsx', '.xlsm')):
+                            wb = openpyxl.load_workbook(filename)
+                            if sheet_name in wb.sheetnames:
+                                sheet = wb[sheet_name]
+                                if sheet.sheet_state == 'hidden':
+                                    print(f"Skipping hidden sheet: {sheet_name}")
+                                    continue
+                    except Exception:
+                        # If we can't check visibility, include the sheet
+                        pass
+                
+                # Convert DataFrame to list of lists and process each row
+                for row_idx, row in df.iterrows():
+                    row_data = row.tolist()
+                    if has_non_null_data(row_data):
+                        # Prepend worksheet name as first column
+                        row_with_sheet = [sheet_name] + row_data
+                        extracted_data.append(row_with_sheet)
+                        
+            except Exception as e:
+                print(f"Warning: Could not process sheet '{sheet_name}': {e}")
+                continue
         
         return extracted_data
         
@@ -93,7 +118,7 @@ def write_to_csv(data, output_filename):
         raise Exception(f"Error writing to CSV file '{output_filename}': {str(e)}")
 
 
-def generate_output_filename(input_filename):
+def generate_output_filename(input_filename, output_dir=None):
     """Generate output filename based on input filename with timestamp."""
     input_path = Path(input_filename)
     base_name = input_path.stem
@@ -102,26 +127,31 @@ def generate_output_filename(input_filename):
     mod_time = os.path.getmtime(input_filename)
     mod_datetime = datetime.fromtimestamp(mod_time).astimezone()
     
-    # Format timestamp in ISO 8601 format, but Windows-compatible (replace colons with hyphens)
-    # e.g., 2025-07-21T14-30-52-0500
-    timestamp = mod_datetime.strftime("%Y-%m-%dT%H-%M-%S%z")
+    # Format timestamp as ISO 8601 (e.g., 2025-07-21T14:30:52-05:00)
+    # Replace colons with hyphens for filename compatibility
+    timestamp = mod_datetime.isoformat().replace(':', '-')
     
-    # Generate base filename
-    base_output_name = f"dumper_{base_name}_{timestamp}.csv"
+    base_filename = f"dumper_{base_name}_{timestamp}"
     
-    # Check if file exists and add incremental number if needed
-    if not os.path.exists(base_output_name):
-        return base_output_name
+    # Determine the directory path
+    if output_dir:
+        output_path = Path(output_dir)
+        # Create directory if it doesn't exist
+        output_path.mkdir(parents=True, exist_ok=True)
+        base_path = output_path / base_filename
+    else:
+        base_path = Path(base_filename)
     
-    # File exists, so add incremental number in parentheses
-    counter = 1
+    # Check if file exists and find an available filename
+    counter = 0
     while True:
-        # Insert counter before .csv extension
-        name_without_ext = base_output_name[:-4]  # Remove .csv
-        incremental_name = f"{name_without_ext}({counter}).csv"
+        if counter == 0:
+            final_filename = f"{base_path}.csv"
+        else:
+            final_filename = f"{base_path}({counter}).csv"
         
-        if not os.path.exists(incremental_name):
-            return incremental_name
+        if not Path(final_filename).exists():
+            return str(final_filename)
         
         counter += 1
 
@@ -129,7 +159,7 @@ def generate_output_filename(input_filename):
 def show_help():
     """Display help information."""
     help_text = """
-Excel Sheet Excavator - Extract data from Excel worksheets to CSV
+Excel Sheet Dumper - Extract data from Excel worksheets to CSV
 
 USAGE:
     python dumper.py [OPTIONS]
@@ -137,28 +167,32 @@ USAGE:
 OPTIONS:
     -file FILE          Specify Excel file to process (default: newest Excel file in current directory)
     -no-hide           Skip hidden worksheets (default: include all worksheets)
+    -output DIR        Output directory for CSV file (default: current directory)
     -help              Show this help message
 
 EXAMPLES:
     python dumper.py                    # Process newest Excel file, include all sheets
     python dumper.py -file data.xlsx    # Process specific file
     python dumper.py -no-hide           # Skip hidden worksheets
-    python dumper.py -file data.xlsx -no-hide  # Specific file, skip hidden sheets
+    python dumper.py -output /path/to/output  # Specify output directory
+    python dumper.py -file data.xlsx -output ./exports -no-hide  # All options combined
 
 OUTPUT:
     Creates a CSV file named "dumper_[original_filename]_[timestamp].csv" with:
     - Timestamp is the last modified time of the originating Excel file
-    - Timestamp format: ISO 8601-like, Windows-compatible (e.g., dumper_data_2025-07-21T14-30-52-0500.csv)
-    - If file exists, adds incremental number: (1), (2), etc.
+    - Timestamp format: ISO 8601 with colons replaced by hyphens (e.g., dumper_data_2025-07-21T14-30-52-05-00.csv)
+    - If file exists, appends incremental number in parentheses (e.g., dumper_data_2025-07-21T14-30-52-05-00(1).csv)
     - First column: Worksheet name
     - Remaining columns: Original data from worksheets
     - Only non-empty rows are included
 
 PYTHON DEPENDENCIES:
-    - pandas  (pip install pandas)
-    - openpyxl  (pip install openpyxl)
-    - xlrd  (pip install xlrd)
+    - pandas         (pip install pandas)
+    - openpyxl       (pip install openpyxl) - for .xlsx/.xlsm files
+    - xlrd           (pip install xlrd) - for .xls files
     - Standard library: argparse, csv, glob, os, sys, pathlib, datetime
+
+    Install all at once: pip install pandas openpyxl xlrd
 
 SUPPORTED EXCEL FORMATS:
     - .xlsx (Excel 2007+)
@@ -180,6 +214,7 @@ def main():
     parser = argparse.ArgumentParser(description='Extract Excel worksheet data to CSV', add_help=False)
     parser.add_argument('-file', dest='filename', help='Excel file to process')
     parser.add_argument('-no-hide', action='store_true', help='Skip hidden worksheets')
+    parser.add_argument('-output', dest='output_dir', help='Output directory for CSV file')
     
     try:
         args = parser.parse_args()
@@ -210,7 +245,7 @@ def main():
             return
         
         # Generate output filename and write CSV
-        output_file = generate_output_filename(input_file)
+        output_file = generate_output_filename(input_file, args.output_dir)
         write_to_csv(extracted_data, output_file)
         
     except Exception as e:
