@@ -210,7 +210,3 @@ For additional help or to report issues:
 1. Run `python dumper.py -help` for detailed usage information
 2. Check that all dependencies are properly installed
 3. Verify Python version compatibility (3.6+)
-
-## License
-
-This script is provided as-is for educational and utility purposes.
