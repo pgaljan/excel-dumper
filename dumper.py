@@ -13,10 +13,10 @@ from datetime import datetime
 from pathlib import Path
 
 try:
-    from sheet_excavator import excavate
+    import pandas as pd
 except ImportError:
-    print("Error: sheet-excavator library not found.")
-    print("Please install it with: pip install sheet-excavator")
+    print("Error: pandas library not found.")
+    print("Please install it with: pip install pandas openpyxl xlrd")
     sys.exit(1)
 
 
@@ -38,25 +38,24 @@ def find_newest_excel_file():
 
 def has_non_null_data(row):
     """Check if a row contains any non-null data."""
-    return any(cell is not None and str(cell).strip() != '' for cell in row)
+    return any(cell is not None and str(cell).strip() != '' and pd.notna(cell) for cell in row)
 
 
 def extract_excel_data(filename, include_hidden=True):
     """Extract data from all worksheets in an Excel file."""
     try:
-        # Use sheet-excavator to read the Excel file
-        workbook_data = excavate(filename)
+        # Read all sheets from the Excel file
+        excel_file = pd.ExcelFile(filename)
         
         extracted_data = []
         
-        for sheet_name, sheet_data in workbook_data.items():
-            # Skip hidden sheets if include_hidden is False
-            # Note: sheet-excavator may not distinguish hidden sheets by default
-            # This would depend on the specific implementation of the library
+        for sheet_name in excel_file.sheet_names:
+            # Read the sheet into a DataFrame
+            df = pd.read_excel(filename, sheet_name=sheet_name, header=None)
             
-            if not sheet_data:
-                continue
-                
+            # Convert DataFrame to list of lists
+            sheet_data = df.values.tolist()
+            
             # Process each row in the sheet
             for row_idx, row in enumerate(sheet_data):
                 if has_non_null_data(row):
@@ -103,10 +102,28 @@ def generate_output_filename(input_filename):
     mod_time = os.path.getmtime(input_filename)
     mod_datetime = datetime.fromtimestamp(mod_time).astimezone()
     
-    # Format timestamp as YYYYMMDD_HHMMSS_TZ (e.g., 20250721_143052_EST)
-    timestamp = mod_datetime.strftime("%Y%m%d_%H%M%S_%Z")
+    # Format timestamp in ISO 8601 format, but Windows-compatible (replace colons with hyphens)
+    # e.g., 2025-07-21T14-30-52-0500
+    timestamp = mod_datetime.strftime("%Y-%m-%dT%H-%M-%S%z")
     
-    return f"dumper_{base_name}_{timestamp}.csv"
+    # Generate base filename
+    base_output_name = f"dumper_{base_name}_{timestamp}.csv"
+    
+    # Check if file exists and add incremental number if needed
+    if not os.path.exists(base_output_name):
+        return base_output_name
+    
+    # File exists, so add incremental number in parentheses
+    counter = 1
+    while True:
+        # Insert counter before .csv extension
+        name_without_ext = base_output_name[:-4]  # Remove .csv
+        incremental_name = f"{name_without_ext}({counter}).csv"
+        
+        if not os.path.exists(incremental_name):
+            return incremental_name
+        
+        counter += 1
 
 
 def show_help():
@@ -131,13 +148,16 @@ EXAMPLES:
 OUTPUT:
     Creates a CSV file named "dumper_[original_filename]_[timestamp].csv" with:
     - Timestamp is the last modified time of the originating Excel file
-    - Timestamp format: YYYYMMDD_HHMMSS_TZ (e.g., dumper_data_20250721_143052_EST.csv)
+    - Timestamp format: ISO 8601-like, Windows-compatible (e.g., dumper_data_2025-07-21T14-30-52-0500.csv)
+    - If file exists, adds incremental number: (1), (2), etc.
     - First column: Worksheet name
     - Remaining columns: Original data from worksheets
     - Only non-empty rows are included
 
 PYTHON DEPENDENCIES:
-    - sheet-excavator  (pip install sheet-excavator)
+    - pandas  (pip install pandas)
+    - openpyxl  (pip install openpyxl)
+    - xlrd  (pip install xlrd)
     - Standard library: argparse, csv, glob, os, sys, pathlib, datetime
 
 SUPPORTED EXCEL FORMATS:
