@@ -8,14 +8,19 @@ Simple python workflow leveraging [sheet-excavator](https://pypi.org/project/she
 **OPTIONS**:
 
 `-file` FILE          Specify Excel file to process (default: newest Excel file in current directory)
+
 `-no-hide`           Skip hidden worksheets (default: include all worksheets)
+
 `-help`              Show this help message
 
 **EXAMPLES**:
 
 `python dumper.py`                    # Process newest Excel file, include all sheets
+
 `python dumper.py -file data.xlsx`    # Process specific file
+
 `python dumper.py -no-hide`           # Skip hidden worksheets
+
 `python dumper.py -file data.xlsx -no-hide`  # Specific file, skip hidden sheets
 
 **OUTPUT**:
