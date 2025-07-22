@@ -1,6 +1,6 @@
 # Dumper
 
-A Python script that extracts all non-null rows from Excel worksheets and exports them to CSV format with worksheet names included.
+A Python-based ETL pre-processor that flattens Excel files into a predictable CSV format with critical source metadata for easy ingestion into data pipelines.
 
 ## Features
 
