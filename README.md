@@ -1,6 +1,6 @@
 # Dumper
 
-A Python-based ETL pre-processor that flattens Excel files into a predictable CSV format with critical source metadata for easy ingestion into data pipelines.
+Cross-platform Python-based ETL pre-processor that flattens Excel files into a predictable CSV format, preserving key source metadata for easy ingestion into data pipelines.
 
 ## Features
 
