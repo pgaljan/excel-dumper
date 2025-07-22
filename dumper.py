@@ -46,7 +46,7 @@ def has_non_null_data(row):
     return any(cell is not None and str(cell).strip() != '' for cell in row)
 
 
-def extract_excel_data(filename, include_hidden=True):
+def extract_excel_data(filename, include_hidden=True, include_row_numbers=False):
     """Extract data from all worksheets in an Excel file."""
     try:
         # Read all sheets from the Excel file
@@ -83,9 +83,15 @@ def extract_excel_data(filename, include_hidden=True):
                 for row_idx, row in df.iterrows():
                     row_data = row.tolist()
                     if has_non_null_data(row_data):
-                        # Prepend worksheet name as first column
-                        row_with_sheet = [sheet_name] + row_data
-                        extracted_data.append(row_with_sheet)
+                        # Build the output row
+                        if include_row_numbers:
+                            # Excel rows are 1-indexed, and we add 1 to account for pandas 0-indexing
+                            excel_row_number = row_idx + 1
+                            row_with_metadata = [sheet_name, excel_row_number] + row_data
+                        else:
+                            row_with_metadata = [sheet_name] + row_data
+                        
+                        extracted_data.append(row_with_metadata)
                         
             except Exception as e:
                 print(f"Warning: Could not process sheet '{sheet_name}': {e}")
@@ -97,7 +103,7 @@ def extract_excel_data(filename, include_hidden=True):
         raise Exception(f"Error reading Excel file '{filename}': {str(e)}")
 
 
-def write_to_csv(data, output_filename):
+def write_to_csv(data, output_filename, include_row_numbers=False):
     """Write extracted data to CSV file."""
     try:
         with open(output_filename, 'w', newline='', encoding='utf-8') as csvfile:
@@ -105,9 +111,26 @@ def write_to_csv(data, output_filename):
             
             # Write header
             if data:
-                # Determine maximum number of columns
+                # Determine maximum number of columns in the data
                 max_cols = max(len(row) for row in data) if data else 0
-                header = ['Worksheet'] + [f'Column_{i}' for i in range(1, max_cols)]
+                
+                if include_row_numbers:
+                    # Structure: [worksheet_name, row_number, ...data_columns...]
+                    # So data columns = total columns - 2
+                    data_cols = max_cols - 2
+                    if data_cols > 0:
+                        header = ['Worksheet', 'Row_Number'] + [f'Column_{i}' for i in range(1, data_cols + 1)]
+                    else:
+                        header = ['Worksheet', 'Row_Number']
+                else:
+                    # Structure: [worksheet_name, ...data_columns...]
+                    # So data columns = total columns - 1
+                    data_cols = max_cols - 1
+                    if data_cols > 0:
+                        header = ['Worksheet'] + [f'Column_{i}' for i in range(1, data_cols + 1)]
+                    else:
+                        header = ['Worksheet']
+                
                 writer.writerow(header)
             
             # Write data rows
@@ -169,18 +192,20 @@ USAGE:
 
 OPTIONS:
     -file FILE          Specify Excel file to process (default: newest Excel file in input directory)
-    -no-hide           Skip hidden worksheets (default: include all worksheets)
-    -output DIR        Output directory for CSV file (default: current directory)
     -input DIR         Input directory to search for Excel files (default: current directory)
+    -output DIR        Output directory for CSV file (default: current directory)
+    -no-hide           Skip hidden worksheets (default: include all worksheets)
+    -rownumbers        Include Excel row numbers in output (default: exclude row numbers)
     -help              Show this help message
 
 EXAMPLES:
     python dumper.py                    # Process newest Excel file from current directory
     python dumper.py -file data.xlsx    # Process specific file
+    python dumper.py -rownumbers        # Include Excel row numbers in output
     python dumper.py -input ./source    # Process newest file from ./source directory
     python dumper.py -input ./source -output ./exports  # Source and output directories
-    python dumper.py -input /data -file report.xlsx     # Specific file in input directory
-    python dumper.py -file data.xlsx -output ./exports -no-hide  # All options combined
+    python dumper.py -input /data -file report.xlsx -rownumbers     # Specific file with row numbers
+    python dumper.py -file data.xlsx -output ./exports -no-hide -rownumbers  # All options combined
 
 OUTPUT:
     Creates a CSV file named "dumper_[original_filename]_[timestamp].csv" with:
@@ -188,6 +213,7 @@ OUTPUT:
     - Timestamp format: ISO 8601 with colons replaced by hyphens (e.g., dumper_data_2025-07-21T14-30-52-05-00.csv)
     - If file exists, appends incremental number in parentheses (e.g., dumper_data_2025-07-21T14-30-52-05-00(1).csv)
     - First column: Worksheet name
+    - Second column: Excel row number (if -rownumbers option used)
     - Remaining columns: Original data from worksheets
     - Only non-empty rows are included
 
@@ -221,6 +247,7 @@ def main():
     parser.add_argument('-no-hide', action='store_true', help='Skip hidden worksheets')
     parser.add_argument('-output', dest='output_dir', help='Output directory for CSV file')
     parser.add_argument('-input', dest='input_dir', help='Input directory to search for Excel files')
+    parser.add_argument('-rownumbers', action='store_true', help='Include Excel row numbers in output')
     
     try:
         args = parser.parse_args()
@@ -250,10 +277,12 @@ def main():
         
         # Extract data
         include_hidden = not args.no_hide
+        include_row_numbers = args.rownumbers
         print(f"Extracting data from: {input_file}")
         print(f"Including hidden sheets: {include_hidden}")
+        print(f"Including row numbers: {include_row_numbers}")
         
-        extracted_data = extract_excel_data(input_file, include_hidden)
+        extracted_data = extract_excel_data(input_file, include_hidden, include_row_numbers)
         
         if not extracted_data:
             print("No data found to export.")
@@ -261,7 +290,7 @@ def main():
         
         # Generate output filename and write CSV
         output_file = generate_output_filename(input_file, args.output_dir)
-        write_to_csv(extracted_data, output_file)
+        write_to_csv(extracted_data, output_file, include_row_numbers)
         
     except Exception as e:
         print(f"Error: {e}")

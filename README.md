@@ -14,6 +14,7 @@ A Python script that extracts all non-null rows from Excel worksheets and export
 - **Flexible input sources**: Search for files in any directory or process specific files
 - **Multiple Excel formats**: Supports .xlsx, .xls, .xlsm, and .xlsb files
 - **Timestamped output**: Uses file modification time for consistent naming (ISO 8601 format)
+- **Row number tracking**: Option to include Excel row numbers for data traceability
 
 ## Installation
 
@@ -74,6 +75,15 @@ python dumper.py -input "./source" -file "report.xlsx"
 python dumper.py -input "/data" -file "monthly.xlsx"
 ```
 
+### Include Row Numbers
+
+Include Excel row numbers in the output for data traceability:
+
+```bash
+python dumper.py -rownumbers
+python dumper.py -file "data.xlsx" -rownumbers
+```
+
 ### Skip Hidden Worksheets
 
 Exclude hidden worksheets from processing:
@@ -95,7 +105,8 @@ python dumper.py -output "C:\Reports"
 
 ```bash
 python dumper.py -input "./source" -output "./exports" -no-hide
-python dumper.py -input "/data" -file "report.xlsx" -output "./processed"
+python dumper.py -input "/data" -file "report.xlsx" -output "./processed" -rownumbers
+python dumper.py -file "data.xlsx" -output "./exports" -no-hide -rownumbers
 ```
 
 ### Get Help
@@ -114,6 +125,7 @@ python dumper.py -help
 | `-input DIR` | Input directory to search for Excel files | `-input "./source"` |
 | `-output DIR` | Output directory for CSV file | `-output "./exports"` |
 | `-no-hide` | Skip hidden worksheets | `-no-hide` |
+| `-rownumbers` | Include Excel row numbers in output | `-rownumbers` |
 | `-help` | Show help message | `-help` |
 
 ## Output
@@ -142,18 +154,29 @@ dumper_Inventory_Data_2025-07-20T09-15-30-05-00.csv
 The output CSV contains:
 
 1. **First column**: Worksheet name
-2. **Remaining columns**: Original data from Excel worksheets (`Column_1`, `Column_2`, etc.)
-3. **Header row**: `Worksheet, Column_1, Column_2, ...`
-4. **Data rows**: Only non-empty rows from the source Excel file
+2. **Second column**: Excel row number (if `-rownumbers` option used)
+3. **Remaining columns**: Original data from Excel worksheets (`Column_1`, `Column_2`, etc.)
+4. **Header row**: `Worksheet, Column_1, Column_2, ...` or `Worksheet, Row_Number, Column_1, Column_2, ...`
+5. **Data rows**: Only non-empty rows from the source Excel file
 
 ### Sample Output
 
+**Without row numbers:**
 ```csv
 Worksheet,Column_1,Column_2,Column_3
 Sheet1,John Doe,Sales Manager,50000
 Sheet1,Jane Smith,Developer,65000
 Summary,Total Employees,,2
 Summary,Average Salary,,57500
+```
+
+**With row numbers (`-rownumbers`):**
+```csv
+Worksheet,Row_Number,Column_1,Column_2,Column_3
+Sheet1,2,John Doe,Sales Manager,50000
+Sheet1,3,Jane Smith,Developer,65000
+Summary,5,Total Employees,,2
+Summary,6,Average Salary,,57500
 ```
 
 ## Supported Excel Formats
@@ -202,6 +225,7 @@ Processing newest Excel file: Q3_Report.xlsx
 From directory: C:\Data
 Extracting data from: C:\Data\Q3_Report.xlsx
 Including hidden sheets: True
+Including row numbers: False
 Data successfully exported to: dumper_Q3_Report_2025-07-21T14-30-52-05-00.csv
 Total rows exported: 1247
 ```
@@ -209,9 +233,10 @@ Total rows exported: 1247
 ### Process Specific File with Input and Output Directories
 
 ```bash
-C:\> python dumper.py -input "./source" -file "Annual_Summary.xlsx" -output "./reports"
+C:\> python dumper.py -input "./source" -file "Annual_Summary.xlsx" -output "./reports" -rownumbers
 Extracting data from: ./source/Annual_Summary.xlsx
 Including hidden sheets: True
+Including row numbers: True
 Data successfully exported to: ./reports/dumper_Annual_Summary_2025-07-21T14-31-15-05-00.csv
 Total rows exported: 892
 ```
