@@ -24,8 +24,7 @@ Python 3.6 or higher is required.
 
 ### Install Dependencies
 
-<pre><code>
-pip install pandas openpyxl xlrd
+<pre><code>pip install pandas openpyxl xlrd
 </code></pre>
 
 Or if you're using a specific Python installation:
@@ -44,16 +43,14 @@ Save the `dumper.py` file to your desired directory.
 
 Process the newest Excel file in the current directory:
 
-<pre><code>
-python dumper.py
+<pre><code>python dumper.py
 </code></pre>
 
 ### Specify Input Directory
 
 Search for and process the newest Excel file in a specific directory:
 
-<pre><code>
-python dumper.py -input "./data"
+<pre><code>python dumper.py -input "./data"
 python dumper.py -input "C:\Reports"
 </code></pre>
 
@@ -61,8 +58,7 @@ python dumper.py -input "C:\Reports"
 
 Process a specific Excel file:
 
-<pre><code>
-python dumper.py -file "data.xlsx"
+<pre><code>python dumper.py -file "data.xlsx"
 python dumper.py -file "C:\Path\To\File.xls"
 </code></pre>
 
@@ -70,8 +66,7 @@ python dumper.py -file "C:\Path\To\File.xls"
 
 Process a specific file within an input directory:
 
-<pre><code>
-python dumper.py -input "./source" -file "report.xlsx"
+<pre><code>python dumper.py -input "./source" -file "report.xlsx"
 python dumper.py -input "/data" -file "monthly.xlsx"
 </code></pre>
 
@@ -79,8 +74,7 @@ python dumper.py -input "/data" -file "monthly.xlsx"
 
 Include Excel row numbers in the output for data traceability:
 
-<pre><code>
-python dumper.py -rownumbers
+<pre><code>python dumper.py -rownumbers
 python dumper.py -file "data.xlsx" -rownumbers
 </code></pre>
 
@@ -88,23 +82,20 @@ python dumper.py -file "data.xlsx" -rownumbers
 
 Exclude hidden worksheets from processing:
 
-<pre><code>
-python dumper.py -no-hide
+<pre><code>python dumper.py -no-hide
 </code></pre>
 
 ### Specify Output Directory
 
 Save the CSV file to a specific directory:
 
-<pre><code>
-python dumper.py -output "./exports"
+<pre><code>python dumper.py -output "./exports"
 python dumper.py -output "C:\Reports"
 </code></pre>
 
 ### Combined Options
 
-<pre><code>
-python dumper.py -input "./source" -output "./exports" -no-hide
+<pre><code>python dumper.py -input "./source" -output "./exports" -no-hide
 python dumper.py -input "/data" -file "report.xlsx" -output "./processed" -rownumbers
 python dumper.py -file "data.xlsx" -output "./exports" -no-hide -rownumbers
 </code></pre>
@@ -113,8 +104,7 @@ python dumper.py -file "data.xlsx" -output "./exports" -no-hide -rownumbers
 
 Display detailed help information:
 
-<pre><code>
-python dumper.py -help
+<pre><code>python dumper.py -help
 </code></pre>
 
 ## Command Line Options
@@ -133,8 +123,7 @@ python dumper.py -help
 ### File Naming Convention
 
 Output files are named using the pattern:
-</code></pre>
-dumper_[original_filename]_[timestamp].csv
+</code></pre>dumper_[original_filename]_[timestamp].csv
 </code></pre>
 
 - **Timestamp format**: ISO 8601 with colons replaced by hyphens for filename compatibility
@@ -143,8 +132,7 @@ dumper_[original_filename]_[timestamp].csv
 
 ### Example Output Filenames
 
-</code></pre>
-dumper_Sales_Report_2025-07-21T14-30-52-05-00.csv
+</code></pre>dumper_Sales_Report_2025-07-21T14-30-52-05-00.csv
 dumper_Sales_Report_2025-07-21T14-30-52-05-00(1).csv
 dumper_Inventory_Data_2025-07-20T09-15-30-05-00.csv
 </code></pre>
@@ -219,8 +207,7 @@ The script provides clear error messages for common issues:
 
 ### Process Latest File from Specific Directory
 
-<pre><code>
-C:\> python dumper.py -input "C:\Data"
+<pre><code>C:\> python dumper.py -input "C:\Data"
 Processing newest Excel file: Q3_Report.xlsx
 From directory: C:\Data
 Extracting data from: C:\Data\Q3_Report.xlsx
@@ -232,8 +219,7 @@ Total rows exported: 1247
 
 ### Process Specific File with Input and Output Directories
 
-<pre><code>
-C:\> python dumper.py -input "./source" -file "Annual_Summary.xlsx" -output "./reports" -rownumbers
+<pre><code>C:\> python dumper.py -input "./source" -file "Annual_Summary.xlsx" -output "./reports" -rownumbers
 Extracting data from: ./source/Annual_Summary.xlsx
 Including hidden sheets: True
 Including row numbers: True
@@ -243,8 +229,7 @@ Total rows exported: 892
 
 ### Skip Hidden Sheets
 
-<pre><code>
-C:\Data> python dumper.py -no-hide
+<pre><code>C:\Data> python dumper.py -no-hide
 Processing newest Excel file: Complex_Workbook.xlsx
 Extracting data from: Complex_Workbook.xlsx
 Including hidden sheets: False
@@ -255,8 +240,7 @@ Total rows exported: 564
 
 ### File Collision Handling
 
-<pre><code>
-C:\Data> python dumper.py -file "report.xlsx"
+<pre><code>C:\Data> python dumper.py -file "report.xlsx"
 # First run creates: dumper_report_2025-07-21T14-30-52-05-00.csv
 
 C:\Data> python dumper.py -file "report.xlsx"
@@ -283,8 +267,7 @@ python dumper.py -file "C:\Reports\data.xlsx" -output "C:\Exports"
 </code></pre>
 
 **macOS/Linux:**
-<pre><code>
-python dumper.py -file "/home/user/data.xlsx" -output "/home/user/exports"
+<pre><code>python dumper.py -file "/home/user/data.xlsx" -output "/home/user/exports"
 </code></pre>
 
 ## Troubleshooting
@@ -329,8 +312,7 @@ For additional help or to report issues:
 
 Process multiple directories:
 
-<pre><code>
-# Process files from multiple source directories
+<pre><code># Process files from multiple source directories
 python dumper.py -input "./2024_data" -output "./processed/2024"
 python dumper.py -input "./2025_data" -output "./processed/2025"
 
@@ -342,8 +324,7 @@ for dir in data/*/; do python dumper.py -input "$dir" -output "./processed/$(bas
 
 Organize processing by separating input and output:
 
-<pre><code>
-# Production workflow
+<pre><code># Production workflow
 python dumper.py -input "/data/incoming" -output "/data/processed" -no-hide
 
 # Development workflow  
@@ -354,8 +335,7 @@ python dumper.py -input "./test_data" -output "./test_results"
 
 The script can be integrated into automated workflows:
 
-<pre><code>
-# Daily report processing from specific directory
+<pre><code># Daily report processing from specific directory
 python dumper.py -input "/data/daily_reports" -output "./exports/$(date +%Y-%m-%d)"
 
 # Weekly batch processing
