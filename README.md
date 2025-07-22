@@ -24,15 +24,15 @@ Python 3.6 or higher is required.
 
 ### Install Dependencies
 
-```bash
+<pre><code>
 pip install pandas openpyxl xlrd
-```
+</code></pre>
 
 Or if you're using a specific Python installation:
 
-```bash
+<pre><code>bash
 python -m pip install pandas openpyxl xlrd
-```
+</code></pre>
 
 ### Download the Script
 
@@ -44,78 +44,78 @@ Save the `dumper.py` file to your desired directory.
 
 Process the newest Excel file in the current directory:
 
-```bash
+<pre><code>
 python dumper.py
-```
+</code></pre>
 
 ### Specify Input Directory
 
 Search for and process the newest Excel file in a specific directory:
 
-```bash
+<pre><code>
 python dumper.py -input "./data"
 python dumper.py -input "C:\Reports"
-```
+</code></pre>
 
 ### Specify a File
 
 Process a specific Excel file:
 
-```bash
+<pre><code>
 python dumper.py -file "data.xlsx"
 python dumper.py -file "C:\Path\To\File.xls"
-```
+</code></pre>
 
 ### Specify File in Input Directory
 
 Process a specific file within an input directory:
 
-```bash
+<pre><code>
 python dumper.py -input "./source" -file "report.xlsx"
 python dumper.py -input "/data" -file "monthly.xlsx"
-```
+</code></pre>
 
 ### Include Row Numbers
 
 Include Excel row numbers in the output for data traceability:
 
-```bash
+<pre><code>
 python dumper.py -rownumbers
 python dumper.py -file "data.xlsx" -rownumbers
-```
+</code></pre>
 
 ### Skip Hidden Worksheets
 
 Exclude hidden worksheets from processing:
 
-```bash
+<pre><code>
 python dumper.py -no-hide
-```
+</code></pre>
 
 ### Specify Output Directory
 
 Save the CSV file to a specific directory:
 
-```bash
+<pre><code>
 python dumper.py -output "./exports"
 python dumper.py -output "C:\Reports"
-```
+</code></pre>
 
 ### Combined Options
 
-```bash
+<pre><code>
 python dumper.py -input "./source" -output "./exports" -no-hide
 python dumper.py -input "/data" -file "report.xlsx" -output "./processed" -rownumbers
 python dumper.py -file "data.xlsx" -output "./exports" -no-hide -rownumbers
-```
+</code></pre>
 
 ### Get Help
 
 Display detailed help information:
 
-```bash
+<pre><code>
 python dumper.py -help
-```
+</code></pre>
 
 ## Command Line Options
 
@@ -133,9 +133,9 @@ python dumper.py -help
 ### File Naming Convention
 
 Output files are named using the pattern:
-```
+</code></pre>
 dumper_[original_filename]_[timestamp].csv
-```
+</code></pre>
 
 - **Timestamp format**: ISO 8601 with colons replaced by hyphens for filename compatibility
 - **Example**: `2025-07-21T14-30-52-05-00` (July 21, 2025 at 2:30:52 PM, GMT-5)
@@ -143,11 +143,11 @@ dumper_[original_filename]_[timestamp].csv
 
 ### Example Output Filenames
 
-```
+</code></pre>
 dumper_Sales_Report_2025-07-21T14-30-52-05-00.csv
 dumper_Sales_Report_2025-07-21T14-30-52-05-00(1).csv
 dumper_Inventory_Data_2025-07-20T09-15-30-05-00.csv
-```
+</code></pre>
 
 ### CSV Structure
 
@@ -162,22 +162,22 @@ The output CSV contains:
 ### Sample Output
 
 **Without row numbers:**
-```csv
+</code></pre>csv
 Worksheet,Column_1,Column_2,Column_3
 Sheet1,John Doe,Sales Manager,50000
 Sheet1,Jane Smith,Developer,65000
 Summary,Total Employees,,2
 Summary,Average Salary,,57500
-```
+</code></pre>
 
 **With row numbers (`-rownumbers`):**
-```csv
+</code></pre>csv
 Worksheet,Row_Number,Column_1,Column_2,Column_3
 Sheet1,2,John Doe,Sales Manager,50000
 Sheet1,3,Jane Smith,Developer,65000
 Summary,5,Total Employees,,2
 Summary,6,Average Salary,,57500
-```
+</code></pre>
 
 ## Supported Excel Formats
 
@@ -219,7 +219,7 @@ The script provides clear error messages for common issues:
 
 ### Process Latest File from Specific Directory
 
-```bash
+<pre><code>
 C:\> python dumper.py -input "C:\Data"
 Processing newest Excel file: Q3_Report.xlsx
 From directory: C:\Data
@@ -228,22 +228,22 @@ Including hidden sheets: True
 Including row numbers: False
 Data successfully exported to: dumper_Q3_Report_2025-07-21T14-30-52-05-00.csv
 Total rows exported: 1247
-```
+</code></pre>
 
 ### Process Specific File with Input and Output Directories
 
-```bash
+<pre><code>
 C:\> python dumper.py -input "./source" -file "Annual_Summary.xlsx" -output "./reports" -rownumbers
 Extracting data from: ./source/Annual_Summary.xlsx
 Including hidden sheets: True
 Including row numbers: True
 Data successfully exported to: ./reports/dumper_Annual_Summary_2025-07-21T14-31-15-05-00.csv
 Total rows exported: 892
-```
+</code></pre>
 
 ### Skip Hidden Sheets
 
-```bash
+<pre><code>
 C:\Data> python dumper.py -no-hide
 Processing newest Excel file: Complex_Workbook.xlsx
 Extracting data from: Complex_Workbook.xlsx
@@ -251,11 +251,11 @@ Including hidden sheets: False
 Skipping hidden sheet: CalculationSheet
 Data successfully exported to: dumper_Complex_Workbook_2025-07-21T14-32-01-05-00.csv
 Total rows exported: 564
-```
+</code></pre>
 
 ### File Collision Handling
 
-```bash
+<pre><code>
 C:\Data> python dumper.py -file "report.xlsx"
 # First run creates: dumper_report_2025-07-21T14-30-52-05-00.csv
 
@@ -264,7 +264,7 @@ C:\Data> python dumper.py -file "report.xlsx"
 
 C:\Data> python dumper.py -file "report.xlsx"
 # Third run creates: dumper_report_2025-07-21T14-30-52-05-00(2).csv
-```
+</code></pre>
 
 ## Cross-Platform Compatibility
 
@@ -278,14 +278,14 @@ This script works on Windows, macOS, and Linux:
 ### Platform-Specific Examples
 
 **Windows:**
-```cmd
+</code></pre>cmd
 python dumper.py -file "C:\Reports\data.xlsx" -output "C:\Exports"
-```
+</code></pre>
 
 **macOS/Linux:**
-```bash
+<pre><code>
 python dumper.py -file "/home/user/data.xlsx" -output "/home/user/exports"
-```
+</code></pre>
 
 ## Troubleshooting
 
@@ -329,38 +329,38 @@ For additional help or to report issues:
 
 Process multiple directories:
 
-```bash
+<pre><code>
 # Process files from multiple source directories
 python dumper.py -input "./2024_data" -output "./processed/2024"
 python dumper.py -input "./2025_data" -output "./processed/2025"
 
 # Process newest file from each subdirectory
 for dir in data/*/; do python dumper.py -input "$dir" -output "./processed/$(basename $dir)"; done
-```
+</code></pre>
 
 ### Directory-Based Workflows
 
 Organize processing by separating input and output:
 
-```bash
+<pre><code>
 # Production workflow
 python dumper.py -input "/data/incoming" -output "/data/processed" -no-hide
 
 # Development workflow  
 python dumper.py -input "./test_data" -output "./test_results"
-```
+</code></pre>
 
 ### Automation
 
 The script can be integrated into automated workflows:
 
-```bash
+<pre><code>
 # Daily report processing from specific directory
 python dumper.py -input "/data/daily_reports" -output "./exports/$(date +%Y-%m-%d)"
 
 # Weekly batch processing
 python dumper.py -input "/data/weekly" -output "/archive/weekly"
-```
+</code></pre>
 
 ### Large Files
 
