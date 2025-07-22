@@ -150,22 +150,22 @@ The output CSV contains:
 ### Sample Output
 
 **Without row numbers:**
-</code></pre>csv
+```csv
 Worksheet,Column_1,Column_2,Column_3
 Sheet1,John Doe,Sales Manager,50000
 Sheet1,Jane Smith,Developer,65000
 Summary,Total Employees,,2
 Summary,Average Salary,,57500
-</code></pre>
+```
 
 **With row numbers (`-rownumbers`):**
-</code></pre>csv
+```csv
 Worksheet,Row_Number,Column_1,Column_2,Column_3
 Sheet1,2,John Doe,Sales Manager,50000
 Sheet1,3,Jane Smith,Developer,65000
 Summary,5,Total Employees,,2
 Summary,6,Average Salary,,57500
-</code></pre>
+```
 
 ## Supported Excel Formats
 
@@ -267,7 +267,8 @@ python dumper.py -file "C:\Reports\data.xlsx" -output "C:\Exports"
 </code></pre>
 
 **macOS/Linux:**
-<pre><code>python dumper.py -file "/home/user/data.xlsx" -output "/home/user/exports"
+<pre><code>
+python dumper.py -file "/home/user/data.xlsx" -output "/home/user/exports"
 </code></pre>
 
 ## Troubleshooting
