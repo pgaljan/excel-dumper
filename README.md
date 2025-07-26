@@ -1,6 +1,6 @@
 # Dumper
 
-Cross-platform Python-based ETL pre-processor that flattens Excel files into a predictable CSV format, preserving key source metadata for easy ingestion into data pipelines.
+Cross-platform Excel ETL pre-processor that flattens Excel files into a predictable CSV format, preserving key source metadata for easy ingestion into data pipelines. Available in both **Python** and **PowerShell** versions.
 
 ## Features
 
@@ -8,146 +8,151 @@ Cross-platform Python-based ETL pre-processor that flattens Excel files into a p
 - **Multi-sheet support**: Extracts data from all worksheets in an Excel file
 - **Hidden sheet control**: Option to include or skip hidden worksheets
 - **Smart filtering**: Only exports rows containing non-null data
+- **Formula extraction**: Option to show formulas instead of calculated values (.xlsx/.xlsm only)
 - **Worksheet identification**: Prepends worksheet name as the first column in output
+- **Row number tracking**: Option to include Excel row numbers for data traceability
 - **Collision-safe naming**: Automatically adds incremental numbers if output files already exist
 - **Custom output directory**: Specify where to save the exported CSV files
 - **Flexible input sources**: Search for files in any directory or process specific files
 - **Multiple Excel formats**: Supports .xlsx, .xls, .xlsm, and .xlsb files
 - **Timestamped output**: Uses file modification time for consistent naming (ISO 8601 format)
-- **Row number tracking**: Option to include Excel row numbers for data traceability
+
+## Quick Start
+
+### Python Version
+```bash
+# Install dependencies
+pip install pandas openpyxl xlrd
+
+# Basic usage
+python dumper.py
+python dumper.py -file "data.xlsx" -rownumbers
+```
+
+### PowerShell Version
+```powershell
+# Install dependencies
+Install-Module ImportExcel -Force
+
+# Basic usage
+.\dumper.ps1
+.\dumper.ps1 -File "data.xlsx" -RowNumbers
+```
 
 ## Installation
 
-### Prerequisites
+### Python Version
 
-Python 3.6 or higher is required.
+**Prerequisites:** Python 3.6 or higher
 
-### Install Dependencies
+**Install Dependencies:**
+```bash
+pip install pandas openpyxl xlrd
+```
 
-<pre><code>pip install pandas openpyxl xlrd
-</code></pre>
+### PowerShell Version
 
-Or if you're using a specific Python installation:
+**Prerequisites:** PowerShell 5.1 or PowerShell Core 6+
 
-<pre><code>bash
-python -m pip install pandas openpyxl xlrd
-</code></pre>
-
-### Download the Script
-
-Save the `dumper.py` file to your desired directory.
-
-## Usage
-
-### Basic Usage
-
-Process the newest Excel file in the current directory:
-
-<pre><code>python dumper.py
-</code></pre>
-
-### Specify Input Directory
-
-Search for and process the newest Excel file in a specific directory:
-
-<pre><code>python dumper.py -input "./data"
-python dumper.py -input "C:\Reports"
-</code></pre>
-
-### Specify a File
-
-Process a specific Excel file:
-
-<pre><code>python dumper.py -file "data.xlsx"
-python dumper.py -file "C:\Path\To\File.xls"
-</code></pre>
-
-### Specify File in Input Directory
-
-Process a specific file within an input directory:
-
-<pre><code>python dumper.py -input "./source" -file "report.xlsx"
-python dumper.py -input "/data" -file "monthly.xlsx"
-</code></pre>
-
-### Include Row Numbers
-
-Include Excel row numbers in the output for data traceability:
-
-<pre><code>python dumper.py -rownumbers
-python dumper.py -file "data.xlsx" -rownumbers
-</code></pre>
-
-### Skip Hidden Worksheets
-
-Exclude hidden worksheets from processing:
-
-<pre><code>python dumper.py -no-hide
-</code></pre>
-
-### Specify Output Directory
-
-Save the CSV file to a specific directory:
-
-<pre><code>python dumper.py -output "./exports"
-python dumper.py -output "C:\Reports"
-</code></pre>
-
-### Combined Options
-
-<pre><code>python dumper.py -input "./source" -output "./exports" -no-hide
-python dumper.py -input "/data" -file "report.xlsx" -output "./processed" -rownumbers
-python dumper.py -file "data.xlsx" -output "./exports" -no-hide -rownumbers
-</code></pre>
-
-### Get Help
-
-Display detailed help information:
-
-<pre><code>python dumper.py -help
-</code></pre>
+**Install Dependencies:**
+```powershell
+Install-Module ImportExcel -Force
+```
+*Note: You may need to run PowerShell as Administrator for the first installation.*
 
 ## Command Line Options
 
-| Option | Description | Example |
-|--------|-------------|---------|
-| `-file FILE` | Specify Excel file to process | `-file "data.xlsx"` |
-| `-input DIR` | Input directory to search for Excel files | `-input "./source"` |
-| `-output DIR` | Output directory for CSV file | `-output "./exports"` |
-| `-no-hide` | Skip hidden worksheets | `-no-hide` |
-| `-rownumbers` | Include Excel row numbers in output | `-rownumbers` |
-| `-help` | Show help message | `-help` |
+| Feature | Python Version | PowerShell Version | Description |
+|---------|----------------|-------------------|-------------|
+| **Specify file** | `-file FILE` | `-File FILE` | Process specific Excel file |
+| **Input directory** | `-input DIR` | `-InputDir DIR` | Directory to search for Excel files |
+| **Output directory** | `-output DIR` | `-OutputDir DIR` | Directory for CSV output |
+| **Skip hidden sheets** | `-no-hide` | `-NoHide` | Exclude hidden worksheets |
+| **Include row numbers** | `-rownumbers` | `-RowNumbers` | Add Excel row numbers to output |
+| **Show formulas** | `-formulas` | `-Formulas` | Show formulas instead of values (.xlsx/.xlsm only) |
+| **Help** | `-help` | `-Help` | Display detailed help |
 
-## Output
+## Usage Examples
+
+### Basic Usage
+
+**Python:**
+```bash
+# Process newest Excel file from current directory
+python dumper.py
+
+# Process specific file
+python dumper.py -file "data.xlsx"
+
+# Include row numbers and formulas
+python dumper.py -file "data.xlsx" -rownumbers -formulas
+```
+
+**PowerShell:**
+```powershell
+# Process newest Excel file from current directory
+.\dumper.ps1
+
+# Process specific file
+.\dumper.ps1 -File "data.xlsx"
+
+# Include row numbers and formulas
+.\dumper.ps1 -File "data.xlsx" -RowNumbers -Formulas
+```
+
+### Advanced Usage
+
+**Python:**
+```bash
+# Comprehensive processing with all options
+python dumper.py -input "./source" -output "./exports" -file "report.xlsx" -no-hide -rownumbers -formulas
+
+# Process from specific directory
+python dumper.py -input "C:\Reports" -output "C:\Processed"
+```
+
+**PowerShell:**
+```powershell
+# Comprehensive processing with all options
+.\dumper.ps1 -InputDir "./source" -OutputDir "./exports" -File "report.xlsx" -NoHide -RowNumbers -Formulas
+
+# Process from specific directory
+.\dumper.ps1 -InputDir "C:\Reports" -OutputDir "C:\Processed"
+```
+
+### Get Help
+
+**Python:**
+```bash
+python dumper.py -help
+```
+
+**PowerShell:**
+```powershell
+.\dumper.ps1 -Help
+```
+
+## Output Format
 
 ### File Naming Convention
 
-Output files are named using the pattern:
-</code></pre>dumper_[original_filename]_[timestamp].csv
-</code></pre>
+Both versions create files with the pattern:
+```
+dumper[py|ps]_[original_filename]_[timestamp].csv
+```
 
-- **Timestamp format**: ISO 8601 with colons replaced by hyphens for filename compatibility
-- **Example**: `2025-07-21T14-30-52-05-00` (July 21, 2025 at 2:30:52 PM, GMT-5)
-- **Collision handling**: If file exists, adds `(1)`, `(2)`, etc.
-
-### Example Output Filenames
-
-</code></pre>dumper_Sales_Report_2025-07-21T14-30-52-05-00.csv
-dumper_Sales_Report_2025-07-21T14-30-52-05-00(1).csv
-dumper_Inventory_Data_2025-07-20T09-15-30-05-00.csv
-</code></pre>
+- **Python version**: `dumperpy_Sales_Report_2025-07-21T14-30-52-0500.csv`
+- **PowerShell version**: `dumperps_Sales_Report_2025-07-21T14-30-52-0500.csv`
+- **Timestamp format**: ISO 8601 with colons replaced by hyphens
+- **Collision handling**: Adds `(1)`, `(2)`, etc. if file exists
 
 ### CSV Structure
 
 The output CSV contains:
 
 1. **First column**: Worksheet name
-2. **Second column**: Excel row number (if `-rownumbers` option used)
+2. **Second column**: Excel row number (if row numbers option used)
 3. **Remaining columns**: Original data from Excel worksheets (`Column_1`, `Column_2`, etc.)
-4. **Header row**: `Worksheet, Column_1, Column_2, ...` or `Worksheet, Row_Number, Column_1, Column_2, ...`
-5. **Data rows**: Only non-empty rows from the source Excel file
-
-### Sample Output
 
 **Without row numbers:**
 ```csv
@@ -155,197 +160,198 @@ Worksheet,Column_1,Column_2,Column_3
 Sheet1,John Doe,Sales Manager,50000
 Sheet1,Jane Smith,Developer,65000
 Summary,Total Employees,,2
-Summary,Average Salary,,57500
 ```
 
-**With row numbers (`-rownumbers`):**
+**With row numbers:**
 ```csv
 Worksheet,Row_Number,Column_1,Column_2,Column_3
 Sheet1,2,John Doe,Sales Manager,50000
 Sheet1,3,Jane Smith,Developer,65000
 Summary,5,Total Employees,,2
-Summary,6,Average Salary,,57500
+```
+
+**With formulas (when `-formulas` option used):**
+```csv
+Worksheet,Column_1,Column_2,Column_3
+Sheet1,John Doe,Sales Manager,50000
+Summary,Total Employees,"FORMULA: =COUNTA(A:A)-1",2
+Summary,Average Salary,"FORMULA: =AVERAGE(C2:C3)",57500
 ```
 
 ## Supported Excel Formats
 
+Both versions support:
 - **.xlsx** - Excel 2007+ (Open XML Format)
 - **.xls** - Excel 97-2003 (Binary Format)
 - **.xlsm** - Excel Macro-Enabled Workbook
 - **.xlsb** - Excel Binary Workbook
 
-## Error Handling
-
-The script provides clear error messages for common issues:
-
-- **File not found**: When specified file doesn't exist
-- **No Excel files**: When no Excel files are found in directory
-- **Import errors**: When required libraries are missing
-- **Read errors**: When Excel file is corrupted or inaccessible
-- **Write errors**: When output location is not writable
-- **Directory creation**: Automatically creates output directories if they don't exist
+**Note:** Formula extraction (`-formulas`/`-Formulas`) only works with .xlsx and .xlsm files.
 
 ## Dependencies
 
-### Required Python Packages
-
+### Python Version
 - **pandas** - Data manipulation and Excel reading
-- **openpyxl** - Excel 2007+ (.xlsx) file support and hidden sheet detection
+- **openpyxl** - Excel 2007+ file support and formula extraction
 - **xlrd** - Legacy Excel (.xls) file support
+- Standard library modules: `argparse`, `csv`, `glob`, `os`, `sys`, `datetime`, `pathlib`
 
-### Standard Library Modules
+### PowerShell Version
+- **ImportExcel** module - Excel file processing
+- PowerShell 5.1 or PowerShell Core 6+
 
-- `argparse` - Command line argument parsing
-- `csv` - CSV file writing
-- `glob` - File pattern matching
-- `os` - Operating system interface
-- `sys` - System-specific parameters
-- `datetime` - Date and time handling
-- `pathlib` - Object-oriented filesystem paths
+## Platform Compatibility
 
-## Examples
+### Python Version
+- **Windows, macOS, Linux** - Full cross-platform support
+- Uses `pathlib` for platform-independent path handling
 
-### Process Latest File from Specific Directory
+### PowerShell Version
+- **Windows** - Native PowerShell 5.1+
+- **macOS, Linux** - PowerShell Core 6+
+- Cross-platform path handling with PowerShell cmdlets
 
-<pre><code>C:\> python dumper.py -input "C:\Data"
-Processing newest Excel file: Q3_Report.xlsx
-From directory: C:\Data
-Extracting data from: C:\Data\Q3_Report.xlsx
-Including hidden sheets: True
-Including row numbers: False
-Data successfully exported to: dumper_Q3_Report_2025-07-21T14-30-52-05-00.csv
-Total rows exported: 1247
-</code></pre>
+## Error Handling
 
-### Process Specific File with Input and Output Directories
+Both versions provide clear error messages for:
+- **File not found**: When specified file doesn't exist
+- **No Excel files**: When no Excel files found in directory
+- **Missing dependencies**: When required libraries/modules aren't installed
+- **Read errors**: When Excel file is corrupted or inaccessible
+- **Write errors**: When output location is not writable
+- **Directory creation**: Automatically creates output directories
 
-<pre><code>C:\> python dumper.py -input "./source" -file "Annual_Summary.xlsx" -output "./reports" -rownumbers
-Extracting data from: ./source/Annual_Summary.xlsx
-Including hidden sheets: True
-Including row numbers: True
-Data successfully exported to: ./reports/dumper_Annual_Summary_2025-07-21T14-31-15-05-00.csv
-Total rows exported: 892
-</code></pre>
+## Example Workflows
 
-### Skip Hidden Sheets
+### Daily Report Processing
 
-<pre><code>C:\Data> python dumper.py -no-hide
-Processing newest Excel file: Complex_Workbook.xlsx
-Extracting data from: Complex_Workbook.xlsx
-Including hidden sheets: False
-Skipping hidden sheet: CalculationSheet
-Data successfully exported to: dumper_Complex_Workbook_2025-07-21T14-32-01-05-00.csv
-Total rows exported: 564
-</code></pre>
+**Python:**
+```bash
+# Process daily reports
+python dumper.py -input "/data/daily_reports" -output "./exports/$(date +%Y-%m-%d)"
+```
 
-### File Collision Handling
+**PowerShell:**
+```powershell
+# Process daily reports
+.\dumper.ps1 -InputDir "C:\Data\DailyReports" -OutputDir "C:\Exports\$(Get-Date -Format 'yyyy-MM-dd')"
+```
 
-<pre><code>C:\Data> python dumper.py -file "report.xlsx"
-# First run creates: dumper_report_2025-07-21T14-30-52-05-00.csv
+### Batch Processing Multiple Directories
 
-C:\Data> python dumper.py -file "report.xlsx"
-# Second run creates: dumper_report_2025-07-21T14-30-52-05-00(1).csv
+**Python:**
+```bash
+# Process multiple directories
+for dir in data/*/; do 
+    python dumper.py -input "$dir" -output "./processed/$(basename $dir)"
+done
+```
 
-C:\Data> python dumper.py -file "report.xlsx"
-# Third run creates: dumper_report_2025-07-21T14-30-52-05-00(2).csv
-</code></pre>
+**PowerShell:**
+```powershell
+# Process multiple directories
+Get-ChildItem "C:\Data" -Directory | ForEach-Object {
+    .\dumper.ps1 -InputDir $_.FullName -OutputDir "C:\Processed\$($_.Name)"
+}
+```
 
-## Cross-Platform Compatibility
+### Development vs Production
 
-This script works on Windows, macOS, and Linux:
+**Python:**
+```bash
+# Development
+python dumper.py -input "./test_data" -output "./test_results" -rownumbers
 
-- **Path handling**: Uses `pathlib` for cross-platform path compatibility
-- **Directory creation**: Automatically handles different path separators
-- **Timezone handling**: Uses system timezone information
-- **File operations**: Compatible across all operating systems
+# Production
+python dumper.py -input "/data/incoming" -output "/data/processed" -no-hide
+```
 
-### Platform-Specific Examples
+**PowerShell:**
+```powershell
+# Development
+.\dumper.ps1 -InputDir "./test_data" -OutputDir "./test_results" -RowNumbers
 
-**Windows:**
-</code></pre>cmd
-python dumper.py -file "C:\Reports\data.xlsx" -output "C:\Exports"
-</code></pre>
-
-**macOS/Linux:**
-<pre><code>
-python dumper.py -file "/home/user/data.xlsx" -output "/home/user/exports"
-</code></pre>
+# Production
+.\dumper.ps1 -InputDir "C:\Data\Incoming" -OutputDir "C:\Data\Processed" -NoHide
+```
 
 ## Troubleshooting
 
 ### Common Issues
 
-**"Error: Required libraries not found"**
-- Install required packages: `pip install pandas openpyxl xlrd`
-- Verify installation: `python -c "import pandas, openpyxl; print('Dependencies OK')"`
+**Python - "Error: Required libraries not found"**
+```bash
+pip install pandas openpyxl xlrd
+python -c "import pandas, openpyxl; print('Dependencies OK')"
+```
+
+**PowerShell - "ImportExcel module not found"**
+```powershell
+Install-Module ImportExcel -Force -Scope CurrentUser
+Import-Module ImportExcel
+```
 
 **"No Excel files found in directory"**
-- Ensure you're in the correct directory or specify the right input directory with `-input`
-- Or specify a file with `-file` option
-- Check for supported file extensions (.xlsx, .xls, .xlsm, .xlsb)
+- Verify directory path with `-input`/`-InputDir`
+- Check file extensions (.xlsx, .xls, .xlsm, .xlsb)
+- Use `-file`/`-File` to specify exact filename
 
-**"Permission denied" or file writing errors**
-- Check that the output directory is writable
-- Close any Excel files that might be locking the directory
-- Try running with administrator privileges if necessary
+**"Permission denied" errors**
+- Check write permissions for output directory
+- Close Excel files that might be locking files
+- Run with appropriate privileges
 
 **"Error reading Excel file"**
-- Ensure the Excel file isn't corrupted
-- Try opening the file in Excel first to verify it's accessible
-- Check that the file isn't password-protected
+- Verify file isn't corrupted by opening in Excel
+- Check file isn't password-protected
+- Ensure file isn't in use by another application
 
-**Hidden sheet detection not working**
-- Hidden sheet detection only works for .xlsx and .xlsm files
-- For .xls files, all sheets are processed regardless of `-no-hide` option
+## Choosing Between Versions
 
-### Getting Help
+### Use Python Version When:
+- You need maximum cross-platform compatibility
+- You're integrating with existing Python data pipelines
+- You prefer pip-based dependency management
+- You need the most mature Excel processing capabilities
 
-For additional help or to report issues:
+### Use PowerShell Version When:
+- You're working primarily in Windows environments
+- You prefer PowerShell-based automation workflows
+- You want native integration with Windows administration tasks
+- You're already using PowerShell for other data processing
 
-1. Run `python dumper.py -help` for detailed usage information
-2. Check that all dependencies are properly installed
-3. Verify Python version compatibility (3.6+)
-4. Ensure you have read permissions for the Excel file and write permissions for the output directory
+## Advanced Configuration
 
-## Advanced Usage
+### Large File Processing
+Both versions handle large files efficiently by:
+- Processing sheets one at a time to manage memory
+- Showing progress for each sheet
+- Using streaming approaches where possible
 
-### Batch Processing
+### Integration with CI/CD
+Both scripts can be integrated into automated workflows:
 
-Process multiple directories:
+**Python in GitHub Actions:**
+```yaml
+- name: Process Excel files
+  run: |
+    pip install pandas openpyxl xlrd
+    python dumper.py -input "./data" -output "./processed"
+```
 
-<pre><code># Process files from multiple source directories
-python dumper.py -input "./2024_data" -output "./processed/2024"
-python dumper.py -input "./2025_data" -output "./processed/2025"
+**PowerShell in Azure DevOps:**
+```yaml
+- task: PowerShell@2
+  inputs:
+    targetType: 'inline'
+    script: |
+      Install-Module ImportExcel -Force
+      .\dumper.ps1 -InputDir ".\data" -OutputDir ".\processed"
+```
 
-# Process newest file from each subdirectory
-for dir in data/*/; do python dumper.py -input "$dir" -output "./processed/$(basename $dir)"; done
-</code></pre>
+## Performance Considerations
 
-### Directory-Based Workflows
-
-Organize processing by separating input and output:
-
-<pre><code># Production workflow
-python dumper.py -input "/data/incoming" -output "/data/processed" -no-hide
-
-# Development workflow  
-python dumper.py -input "./test_data" -output "./test_results"
-</code></pre>
-
-### Automation
-
-The script can be integrated into automated workflows:
-
-<pre><code># Daily report processing from specific directory
-python dumper.py -input "/data/daily_reports" -output "./exports/$(date +%Y-%m-%d)"
-
-# Weekly batch processing
-python dumper.py -input "/data/weekly" -output "/archive/weekly"
-</code></pre>
-
-### Large Files
-
-For very large Excel files:
-- The script processes sheets one at a time to manage memory usage
-- Progress is shown for each sheet being processed
-- Consider using the `-no-hide` option to skip unnecessary hidden sheets
+- **Hidden sheets**: Use `-no-hide`/`-NoHide` to skip unnecessary processing
+- **Formula extraction**: Only enable when needed as it requires additional processing
+- **Large workbooks**: Both versions stream data to minimize memory usage
+- **Network drives**: Local processing is faster than network-mounted drives

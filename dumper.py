@@ -46,56 +46,105 @@ def has_non_null_data(row):
     return any(cell is not None and str(cell).strip() != '' for cell in row)
 
 
-def extract_excel_data(filename, include_hidden=True, include_row_numbers=False):
+def extract_excel_data(filename, include_hidden=True, include_row_numbers=False, include_formulas=False):
     """Extract data from all worksheets in an Excel file."""
     try:
-        # Read all sheets from the Excel file
-        # pandas automatically handles multiple Excel formats
-        excel_file = pd.ExcelFile(filename)
-        
         extracted_data = []
         
-        for sheet_name in excel_file.sheet_names:
-            try:
-                # Read the sheet into a DataFrame
-                df = pd.read_excel(filename, sheet_name=sheet_name, header=None)
-                
-                # Skip empty sheets
-                if df.empty:
+        # Check for unsupported file types with formulas option
+        if include_formulas and not filename.lower().endswith(('.xlsx', '.xlsm')):
+            print(f"Warning: -formulas option only works with .xlsx and .xlsm files.")
+            print(f"File '{filename}' will be processed with calculated values instead of formulas.")
+            include_formulas = False  # Disable formulas for unsupported files
+        
+        # If formulas are requested, we need to use openpyxl for direct cell access
+        if include_formulas and filename.lower().endswith(('.xlsx', '.xlsm')):
+            wb = openpyxl.load_workbook(filename, data_only=False)
+            
+            for sheet_name in wb.sheetnames:
+                try:
+                    sheet = wb[sheet_name]
+                    
+                    # Check if sheet is hidden
+                    if not include_hidden and sheet.sheet_state == 'hidden':
+                        print(f"Skipping hidden sheet: {sheet_name}")
+                        continue
+                    
+                    # Process each row in the sheet
+                    for row_idx, row in enumerate(sheet.iter_rows(values_only=False), 1):
+                        row_data = []
+                        has_data = False
+                        
+                        for cell in row:
+                            if cell.value is not None:
+                                # Check if cell has a formula
+                                if hasattr(cell, 'formula') and cell.formula:
+                                    # Prefix with "FORMULA: " to prevent CSV interpretation and circular references
+                                    row_data.append(f"FORMULA: ={cell.formula}")
+                                else:
+                                    row_data.append(cell.value)
+                                has_data = True
+                            else:
+                                row_data.append(None)
+                        
+                        if has_data and has_non_null_data(row_data):
+                            # Build the output row
+                            if include_row_numbers:
+                                row_with_metadata = [sheet_name, row_idx] + row_data
+                            else:
+                                row_with_metadata = [sheet_name] + row_data
+                            
+                            extracted_data.append(row_with_metadata)
+                            
+                except Exception as e:
+                    print(f"Warning: Could not process sheet '{sheet_name}': {e}")
                     continue
-                
-                # Check if sheet is hidden (requires openpyxl for .xlsx files)
-                if not include_hidden:
-                    try:
-                        # Load workbook to check sheet visibility
-                        if filename.lower().endswith(('.xlsx', '.xlsm')):
-                            wb = openpyxl.load_workbook(filename)
-                            if sheet_name in wb.sheetnames:
-                                sheet = wb[sheet_name]
-                                if sheet.sheet_state == 'hidden':
-                                    print(f"Skipping hidden sheet: {sheet_name}")
-                                    continue
-                    except Exception:
-                        # If we can't check visibility, include the sheet
-                        pass
-                
-                # Convert DataFrame to list of lists and process each row
-                for row_idx, row in df.iterrows():
-                    row_data = row.tolist()
-                    if has_non_null_data(row_data):
-                        # Build the output row
-                        if include_row_numbers:
-                            # Excel rows are 1-indexed, and we add 1 to account for pandas 0-indexing
-                            excel_row_number = row_idx + 1
-                            row_with_metadata = [sheet_name, excel_row_number] + row_data
-                        else:
-                            row_with_metadata = [sheet_name] + row_data
-                        
-                        extracted_data.append(row_with_metadata)
-                        
-            except Exception as e:
-                print(f"Warning: Could not process sheet '{sheet_name}': {e}")
-                continue
+        
+        else:
+            # Use pandas for standard data extraction (calculated values)
+            excel_file = pd.ExcelFile(filename)
+            
+            for sheet_name in excel_file.sheet_names:
+                try:
+                    # Read the sheet into a DataFrame
+                    df = pd.read_excel(filename, sheet_name=sheet_name, header=None)
+                    
+                    # Skip empty sheets
+                    if df.empty:
+                        continue
+                    
+                    # Check if sheet is hidden (requires openpyxl for .xlsx files)
+                    if not include_hidden:
+                        try:
+                            # Load workbook to check sheet visibility
+                            if filename.lower().endswith(('.xlsx', '.xlsm')):
+                                wb = openpyxl.load_workbook(filename)
+                                if sheet_name in wb.sheetnames:
+                                    sheet = wb[sheet_name]
+                                    if sheet.sheet_state == 'hidden':
+                                        print(f"Skipping hidden sheet: {sheet_name}")
+                                        continue
+                        except Exception:
+                            # If we can't check visibility, include the sheet
+                            pass
+                    
+                    # Convert DataFrame to list of lists and process each row
+                    for row_idx, row in df.iterrows():
+                        row_data = row.tolist()
+                        if has_non_null_data(row_data):
+                            # Build the output row
+                            if include_row_numbers:
+                                # Excel rows are 1-indexed, and we add 1 to account for pandas 0-indexing
+                                excel_row_number = row_idx + 1
+                                row_with_metadata = [sheet_name, excel_row_number] + row_data
+                            else:
+                                row_with_metadata = [sheet_name] + row_data
+                            
+                            extracted_data.append(row_with_metadata)
+                            
+                except Exception as e:
+                    print(f"Warning: Could not process sheet '{sheet_name}': {e}")
+                    continue
         
         return extracted_data
         
@@ -157,7 +206,7 @@ def generate_output_filename(input_filename, output_dir=None):
     # Replace colons with hyphens for filename compatibility
     timestamp = mod_datetime.isoformat().replace(':', '-')
     
-    base_filename = f"dumper_{base_name}_{timestamp}"
+    base_filename = f"dumperpy_{base_name}_{timestamp}"
     
     # Determine the directory path
     if output_dir:
@@ -196,16 +245,18 @@ OPTIONS:
     -output DIR        Output directory for CSV file (default: current directory)
     -no-hide           Skip hidden worksheets (default: include all worksheets)
     -rownumbers        Include Excel row numbers in output (default: exclude row numbers)
+    -formulas          Show formulas instead of calculated values (.xlsx/.xlsm only)
     -help              Show this help message
 
 EXAMPLES:
     python dumper.py                    # Process newest Excel file from current directory
     python dumper.py -file data.xlsx    # Process specific file
     python dumper.py -rownumbers        # Include Excel row numbers in output
+    python dumper.py -formulas          # Show formulas instead of values
     python dumper.py -input ./source    # Process newest file from ./source directory
     python dumper.py -input ./source -output ./exports  # Source and output directories
     python dumper.py -input /data -file report.xlsx -rownumbers     # Specific file with row numbers
-    python dumper.py -file data.xlsx -output ./exports -no-hide -rownumbers  # All options combined
+    python dumper.py -file data.xlsx -output ./exports -no-hide -rownumbers -formulas  # All options combined
 
 OUTPUT:
     Creates a CSV file named "dumper_[original_filename]_[timestamp].csv" with:
@@ -214,8 +265,13 @@ OUTPUT:
     - If file exists, appends incremental number in parentheses (e.g., dumper_data_2025-07-21T14-30-52-05-00(1).csv)
     - First column: Worksheet name
     - Second column: Excel row number (if -rownumbers option used)
+    - Third column: Excel formulas (if -formulas option used, .xlsx/.xlsm files only)
     - Remaining columns: Original data from worksheets
     - Only non-empty rows are included
+    - Formulas are prefixed with 'FORMULA: =' to prevent circular references in spreadsheet applications
+
+NOTE: The -formulas option only works with .xlsx and .xlsm files. For .xls and .xlsb files, 
+calculated values will be shown regardless of this setting.
 
 PYTHON DEPENDENCIES:
     - pandas         (pip install pandas)
@@ -247,6 +303,7 @@ def main():
     parser.add_argument('-no-hide', action='store_true', help='Skip hidden worksheets')
     parser.add_argument('-output', dest='output_dir', help='Output directory for CSV file')
     parser.add_argument('-input', dest='input_dir', help='Input directory to search for Excel files')
+    parser.add_argument('-formulas', action='store_true', help='Show formulas instead of calculated values (.xlsx/.xlsm only)')
     parser.add_argument('-rownumbers', action='store_true', help='Include Excel row numbers in output')
     
     try:
@@ -278,11 +335,13 @@ def main():
         # Extract data
         include_hidden = not args.no_hide
         include_row_numbers = args.rownumbers
+        include_formulas = args.formulas
         print(f"Extracting data from: {input_file}")
         print(f"Including hidden sheets: {include_hidden}")
         print(f"Including row numbers: {include_row_numbers}")
+        print(f"Including formulas: {include_formulas}")
         
-        extracted_data = extract_excel_data(input_file, include_hidden, include_row_numbers)
+        extracted_data = extract_excel_data(input_file, include_hidden, include_row_numbers, include_formulas)
         
         if not extracted_data:
             print("No data found to export.")
