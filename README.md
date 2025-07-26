@@ -1,6 +1,6 @@
 # Dumper
 
-Cross-platform Excel ETL pre-processor that flattens Excel files into a predictable CSV format, preserving key source metadata for easy ingestion into data pipelines. Available in both **Python** and **PowerShell** versions.
+Cross-platform Excel ETL pre-processor that flattens Excel files into a predictable CSV format, preserving key source metadata for easy ingestion into data pipelines. Exports values or formulas, simplifying audit processes. Available in both **Python** and **PowerShell** versions.
 
 ## Features
 
@@ -55,10 +55,15 @@ pip install pandas openpyxl xlrd
 **Prerequisites:** PowerShell 5.1 or PowerShell Core 6+
 
 **Install Dependencies:**
+*with admin rights*
 ```powershell
 Install-Module ImportExcel -Force
 ```
-*Note: You may need to run PowerShell as Administrator for the first installation.*
+*without admin rights*
+
+```powershell
+Install-Module ImportExcel -Force -Scope CurrentUser
+```
 
 ## Command Line Options
 

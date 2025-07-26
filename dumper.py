@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """
 Excel Sheet Dumper Script
-Extracts all non-null rows from Excel worksheets and saves to CSV format.
+Extracts all non-null rows from Excel worksheets and saves to CSV or JSON format.
 """
 
 import argparse
 import csv
 import glob
+import json
 import os
 import sys
 from datetime import datetime
@@ -193,7 +194,55 @@ def write_to_csv(data, output_filename, include_row_numbers=False):
         raise Exception(f"Error writing to CSV file '{output_filename}': {str(e)}")
 
 
-def generate_output_filename(input_filename, output_dir=None):
+def write_to_json(data, output_filename, include_row_numbers=False):
+    """Write extracted data to JSON file, excluding null values."""
+    try:
+        json_data = []
+        
+        if data:
+            # Determine maximum number of columns in the data
+            max_cols = max(len(row) for row in data) if data else 0
+            
+            # Create column names based on structure
+            if include_row_numbers:
+                # Structure: [worksheet_name, row_number, ...data_columns...]
+                data_cols = max_cols - 2
+                if data_cols > 0:
+                    column_names = ['Worksheet', 'Row_Number'] + [f'Column_{i}' for i in range(1, data_cols + 1)]
+                else:
+                    column_names = ['Worksheet', 'Row_Number']
+            else:
+                # Structure: [worksheet_name, ...data_columns...]
+                data_cols = max_cols - 1
+                if data_cols > 0:
+                    column_names = ['Worksheet'] + [f'Column_{i}' for i in range(1, data_cols + 1)]
+                else:
+                    column_names = ['Worksheet']
+            
+            # Convert each row to a dictionary, excluding null values
+            for row in data:
+                row_dict = {}
+                for i, value in enumerate(row[:len(column_names)]):
+                    # Skip null values, empty strings, and pandas NA values
+                    if (value is not None and 
+                        not (hasattr(value, 'isna') and value.isna()) and 
+                        str(value).lower() != 'nan' and 
+                        str(value).strip() != ''):
+                        row_dict[column_names[i]] = value
+                json_data.append(row_dict)
+        
+        # Write JSON with pretty formatting
+        with open(output_filename, 'w', encoding='utf-8') as jsonfile:
+            json.dump(json_data, jsonfile, indent=2, ensure_ascii=False, default=str)
+                
+        print(f"Data successfully exported to: {output_filename}")
+        print(f"Total rows exported: {len(data)}")
+        
+    except Exception as e:
+        raise Exception(f"Error writing to JSON file '{output_filename}': {str(e)}")
+
+
+def generate_output_filename(input_filename, output_dir=None, output_format='csv'):
     """Generate output filename based on input filename with timestamp."""
     input_path = Path(input_filename)
     base_name = input_path.stem
@@ -217,13 +266,16 @@ def generate_output_filename(input_filename, output_dir=None):
     else:
         base_path = Path(base_filename)
     
+    # Set file extension based on format
+    file_extension = '.json' if output_format == 'json' else '.csv'
+    
     # Check if file exists and find an available filename
     counter = 0
     while True:
         if counter == 0:
-            final_filename = f"{base_path}.csv"
+            final_filename = f"{base_path}{file_extension}"
         else:
-            final_filename = f"{base_path}({counter}).csv"
+            final_filename = f"{base_path}({counter}){file_extension}"
         
         if not Path(final_filename).exists():
             return str(final_filename)
@@ -234,7 +286,7 @@ def generate_output_filename(input_filename, output_dir=None):
 def show_help():
     """Display help information."""
     help_text = """
-Excel Sheet Dumper - Extract data from Excel worksheets to CSV
+Excel Sheet Dumper - Extract data from Excel worksheets to CSV or JSON
 
 USAGE:
     python dumper.py [OPTIONS]
@@ -242,32 +294,44 @@ USAGE:
 OPTIONS:
     -file FILE          Specify Excel file to process (default: newest Excel file in input directory)
     -input DIR         Input directory to search for Excel files (default: current directory)
-    -output DIR        Output directory for CSV file (default: current directory)
+    -output DIR        Output directory for output file (default: current directory)
     -no-hide           Skip hidden worksheets (default: include all worksheets)
     -rownumbers        Include Excel row numbers in output (default: exclude row numbers)
     -formulas          Show formulas instead of calculated values (.xlsx/.xlsm only)
+    -json              Output to JSON format instead of CSV (default: CSV)
     -help              Show this help message
 
 EXAMPLES:
-    python dumper.py                    # Process newest Excel file from current directory
-    python dumper.py -file data.xlsx    # Process specific file
-    python dumper.py -rownumbers        # Include Excel row numbers in output
-    python dumper.py -formulas          # Show formulas instead of values
+    python dumper.py                    # Process newest Excel file from current directory to CSV
+    python dumper.py -file data.xlsx    # Process specific file to CSV
+    python dumper.py -json              # Process newest Excel file to JSON format
+    python dumper.py -file data.xlsx -json  # Process specific file to JSON format
+    python dumper.py -rownumbers        # Include Excel row numbers in CSV output
+    python dumper.py -formulas          # Show formulas instead of values in CSV
     python dumper.py -input ./source    # Process newest file from ./source directory
     python dumper.py -input ./source -output ./exports  # Source and output directories
-    python dumper.py -input /data -file report.xlsx -rownumbers     # Specific file with row numbers
-    python dumper.py -file data.xlsx -output ./exports -no-hide -rownumbers -formulas  # All options combined
+    python dumper.py -input /data -file report.xlsx -rownumbers -json  # Specific file with row numbers to JSON
+    python dumper.py -file data.xlsx -output ./exports -no-hide -rownumbers -formulas -json  # All options combined
 
 OUTPUT:
-    Creates a CSV file named "dumper_[original_filename]_[timestamp].csv" with:
+    Creates a CSV or JSON file named "dumperpy_[original_filename]_[timestamp].[csv|json]" with:
     - Timestamp is the last modified time of the originating Excel file
-    - Timestamp format: ISO 8601 with colons replaced by hyphens (e.g., dumper_data_2025-07-21T14-30-52-05-00.csv)
-    - If file exists, appends incremental number in parentheses (e.g., dumper_data_2025-07-21T14-30-52-05-00(1).csv)
+    - Timestamp format: ISO 8601 with colons replaced by hyphens (e.g., dumperpy_data_2025-07-21T14-30-52-05-00.csv)
+    - If file exists, appends incremental number in parentheses (e.g., dumperpy_data_2025-07-21T14-30-52-05-00(1).csv)
+    
+    CSV FORMAT:
     - First column: Worksheet name
     - Second column: Excel row number (if -rownumbers option used)
-    - Third column: Excel formulas (if -formulas option used, .xlsx/.xlsm files only)
     - Remaining columns: Original data from worksheets
     - Only non-empty rows are included
+    
+    JSON FORMAT:
+    - Array of objects where each object represents a row
+    - Each object has keys: "Worksheet", "Row_Number" (if -rownumbers used), "Column_1", "Column_2", etc.
+    - Only non-empty rows are included
+    - Pretty-formatted with 2-space indentation
+    - Null values and empty strings are excluded from JSON objects
+    
     - Formulas are prefixed with 'FORMULA: =' to prevent circular references in spreadsheet applications
 
 NOTE: The -formulas option only works with .xlsx and .xlsm files. For .xls and .xlsb files, 
@@ -277,7 +341,7 @@ PYTHON DEPENDENCIES:
     - pandas         (pip install pandas)
     - openpyxl       (pip install openpyxl) - for .xlsx/.xlsm files
     - xlrd           (pip install xlrd) - for .xls files
-    - Standard library: argparse, csv, glob, os, sys, pathlib, datetime
+    - Standard library: argparse, csv, json, glob, os, sys, pathlib, datetime
 
     Install all at once: pip install pandas openpyxl xlrd
 
@@ -298,16 +362,20 @@ def main():
         show_help()
         return
     
-    parser = argparse.ArgumentParser(description='Extract Excel worksheet data to CSV', add_help=False)
+    parser = argparse.ArgumentParser(description='Extract Excel worksheet data to CSV or JSON', add_help=False)
     parser.add_argument('-file', dest='filename', help='Excel file to process')
     parser.add_argument('-no-hide', action='store_true', help='Skip hidden worksheets')
-    parser.add_argument('-output', dest='output_dir', help='Output directory for CSV file')
+    parser.add_argument('-output', dest='output_dir', help='Output directory for output file')
     parser.add_argument('-input', dest='input_dir', help='Input directory to search for Excel files')
     parser.add_argument('-formulas', action='store_true', help='Show formulas instead of calculated values (.xlsx/.xlsm only)')
     parser.add_argument('-rownumbers', action='store_true', help='Include Excel row numbers in output')
+    parser.add_argument('-json', action='store_true', help='Output to JSON format instead of CSV')
     
     try:
         args = parser.parse_args()
+        
+        # Determine output format
+        output_format = 'json' if args.json else 'csv'
         
         # Determine input file
         if args.filename:
@@ -340,6 +408,7 @@ def main():
         print(f"Including hidden sheets: {include_hidden}")
         print(f"Including row numbers: {include_row_numbers}")
         print(f"Including formulas: {include_formulas}")
+        print(f"Output format: {output_format.upper()}")
         
         extracted_data = extract_excel_data(input_file, include_hidden, include_row_numbers, include_formulas)
         
@@ -347,9 +416,13 @@ def main():
             print("No data found to export.")
             return
         
-        # Generate output filename and write CSV
-        output_file = generate_output_filename(input_file, args.output_dir)
-        write_to_csv(extracted_data, output_file, include_row_numbers)
+        # Generate output filename and write file
+        output_file = generate_output_filename(input_file, args.output_dir, output_format)
+        
+        if output_format == 'json':
+            write_to_json(extracted_data, output_file, include_row_numbers)
+        else:
+            write_to_csv(extracted_data, output_file, include_row_numbers)
         
     except Exception as e:
         print(f"Error: {e}")
