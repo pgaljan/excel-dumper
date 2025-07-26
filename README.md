@@ -55,6 +55,7 @@ pip install pandas openpyxl xlrd
 **Prerequisites:** PowerShell 5.1 or PowerShell Core 6+
 
 **Install Dependencies:**
+
 *with admin rights*
 ```powershell
 Install-Module ImportExcel -Force
