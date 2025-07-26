@@ -255,26 +255,6 @@ Get-ChildItem "C:\Data" -Directory | ForEach-Object {
 }
 ```
 
-### Development vs Production
-
-**Python:**
-```bash
-# Development
-python dumper.py -input "./test_data" -output "./test_results" -rownumbers
-
-# Production
-python dumper.py -input "/data/incoming" -output "/data/processed" -no-hide
-```
-
-**PowerShell:**
-```powershell
-# Development
-.\dumper.ps1 -InputDir "./test_data" -OutputDir "./test_results" -RowNumbers
-
-# Production
-.\dumper.ps1 -InputDir "C:\Data\Incoming" -OutputDir "C:\Data\Processed" -NoHide
-```
-
 ## Troubleshooting
 
 ### Common Issues
