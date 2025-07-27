@@ -1,5 +1,7 @@
 # Dumper
-
+<!-- README.md -->
++ [![cov](https://pgaljan.github.io/dumper/badges/coverage.svg)](https://github.com/pgaljan/dumper/actions)
++ 
 Cross-platform Excel ETL pre-processor that flattens Excel files into a predictable CSV format, preserving key source metadata for easy ingestion into data pipelines. Exports values or formulas, simplifying audit processes. Available in both **Python** and **PowerShell** versions.
 
 ## Features
