@@ -1,0 +1,13 @@
+LICENSE
+README.md
+pyproject.toml
+excel_dumper/__initi__.py
+excel_dumper/dumper.py
+excel_dumper/py.typed
+excel_dumper.egg-info/PKG-INFO
+excel_dumper.egg-info/SOURCES.txt
+excel_dumper.egg-info/dependency_links.txt
+excel_dumper.egg-info/entry_points.txt
+excel_dumper.egg-info/requires.txt
+excel_dumper.egg-info/top_level.txt
+tests/test_dumper.py

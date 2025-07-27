@@ -1,0 +1,5 @@
+[console_scripts]
+dumper = excel_dumper.dumper:main
+dumperpy = excel_dumper.dumper:main
+excel-dumper = excel_dumper.dumper:main
+excel-sheet-dumper = excel_dumper.dumper:main

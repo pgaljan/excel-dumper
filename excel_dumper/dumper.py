@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Excel Sheet Dumper Script
 Extracts all non-null rows from Excel worksheets and saves to CSV or JSON format.

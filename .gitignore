@@ -1,0 +1,8 @@
+dumperpy_*.csv
+dumperpy_*.json
+*.xlsx
+*.xls
+__pycache__/
+.coverage
+htmlcov/
+.pytest_cache/
