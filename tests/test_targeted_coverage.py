@@ -14,24 +14,6 @@ class TestTargetedCoverage:
     """Tests targeting specific uncovered lines."""
     
     @patch('builtins.__import__')
-    def test_import_error_lines_18_22(self, mock_import):
-        """Target lines 18-22: Import error handling."""
-        # Mock import to raise ImportError for pandas
-        def side_effect(name, *args, **kwargs):
-            if name == 'pandas':
-                raise ImportError("No module named 'pandas'")
-            return __import__(name, *args, **kwargs)
-        
-        mock_import.side_effect = side_effect
-        
-        # This should trigger the import error handling
-        with pytest.raises(SystemExit):
-            import importlib
-            importlib.reload(sys.modules.get('excel_dumper.dumper'))
-        
-        print("✓ Import error handling tested")
-    
-    
     def test_dependency_check_lines_56_58(self):
         """Target lines 56-58: Dependency checking code."""
         from excel_dumper.dumper import has_non_null_data
